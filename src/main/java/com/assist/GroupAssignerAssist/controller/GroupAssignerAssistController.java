@@ -238,18 +238,23 @@ public class GroupAssignerAssistController {
 	    }
 	}
     
-    @GetMapping("downloadProfileTemplate")
-    public ResponseEntity<byte[]> downloadProfileTemplate() throws IOException {
-        ClassPathResource resource = new ClassPathResource("static/profile.xlsx");
+	@GetMapping("downloadProfileTemplate")
+	public ResponseEntity<byte[]> downloadProfileTemplate() throws IOException {
+	    ClassPathResource resource = new ClassPathResource("static/profile.xlsx");
 
-        byte[] fileData = Files.readAllBytes(resource.getFile().toPath());
+	    // InputStream을 통해 파일 내용을 읽어들임
+	    byte[] fileData;
+	    try (InputStream inputStream = resource.getInputStream()) {
+	        fileData = inputStream.readAllBytes();
+	    }
 
-        String filename = URLEncoder.encode("profile.xlsx", StandardCharsets.UTF_8).replaceAll("\\+", "%20");
+	    String filename = URLEncoder.encode("profile.xlsx", StandardCharsets.UTF_8)
+	                                 .replaceAll("\\+", "%20");
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + filename)
-                .contentType(MediaType.parseMediaType(
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                .body(fileData);
-    }
+	    return ResponseEntity.ok()
+	            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + filename)
+	            .contentType(MediaType.parseMediaType(
+	                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+	            .body(fileData);
+	}
 }
