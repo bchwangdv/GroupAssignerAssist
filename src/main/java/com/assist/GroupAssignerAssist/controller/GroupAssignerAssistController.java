@@ -1,31 +1,53 @@
 package com.assist.GroupAssignerAssist.controller;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.assist.GroupAssignerAssist.model.Person;
 
 @Controller
 public class GroupAssignerAssistController {
+
+	@GetMapping("loadStudentFromProfile")
+	public String loadStudentFromProfile(@RequestParam("numGroups") int numGroups, @RequestParam("moduleNo") int moduleNo) {
+		System.out.println(numGroups +" + "+ moduleNo);
+//		List<Person> people = new ArrayList<>();
+//
+//		try(BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+//
+//			String line = br.readLine();
+//	   
+//			if (line.startsWith("\uFEFF")) {
+//				line = line.substring(1); // BOM 제거
+//			}
+//   
+//			while ((line = br.readLine()) != null) {
+//				String[] tokens = line.split(",");
+//				if (tokens.length < 3) continue; // 안전장치
+//
+//				String name = tokens[0].trim();
+//				String gender = tokens[1].trim();
+//				String job = tokens[2].trim();
+//
+//				people.add(new Person(name, gender, job));
+//			}
+//			
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+		
+		
+		return "processing";
+	}
+	@GetMapping("result")
+	public String resultPage() {
+		return "result";
+	}
 //    public static List<List<Person>> splitIntoGroup(List<Person> people, int numGroups) {
 //
 //        List<Person> shuffled = new ArrayList<>(people);
@@ -40,7 +62,6 @@ public class GroupAssignerAssistController {
 //        }
 //
 //        return groups;
-//
 //    }
 //
 //    public static Map<String, Set<String>> loadPastGroups(String filename, int currentRound) {
@@ -167,32 +188,11 @@ public class GroupAssignerAssistController {
 //        }
 //    }
 //
-//    public static List<Person> loadPeopleFromCSV(String filename) {
-//        List<Person> people = new ArrayList<>();
-//
-//        try(BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filename), StandardCharsets.UTF_8))) {
-//
-//			String line = br.readLine();
-//			   
-//			if (line.startsWith("\uFEFF")) {
-//				line = line.substring(1);
-//			}
-//        	   
-//            while ((line = br.readLine()) != null) {
-//                String[] tokens = line.split(",");
-//                if (tokens.length < 3) continue; // 안전장치
-//
-//                String name = tokens[0].trim();
-//                String gender = tokens[1].trim();
-//                String job = tokens[2].trim();
-//
-//                people.add(new Person(name, gender, job));
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        return people;
-//    }
-	
+
+    
+//	public static void assignGroups(List<Person> people, int numGroups) {
+//		splitIntoGroup(people, numGroups);
+//		return ;
+//	}
 	
 }

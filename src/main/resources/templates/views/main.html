@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>조편성 메인</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <!-- Bootstrap 5 CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
@@ -16,19 +17,24 @@
                 <div class="card-body">
                     <h2 class="card-title mb-4 text-center">aSSIST 조 편성 프로그램 v0.1</h2>
 
-                    <form action="/assign" method="post">
+                    <form id="assignForm" action="loadStudentFromProfile" method="get">
                         <div class="mb-3">
                             <label for="numGroups" class="form-label">조 개수</label>
-                            <input type="number" class="form-control" id="numGroups" name="numGroups" min="1" required>
+                            <input type="number" class="form-control" id="numGroups" name="numGroups" min="1">
                         </div>
 
                         <div class="mb-3">
                             <label for="moduleNo" class="form-label">모듈 번호</label>
-                            <input type="number" class="form-control" id="moduleNo" name="moduleNo" min="1" required>
+                            <input type="number" class="form-control" id="moduleNo" name="moduleNo" min="1">
                         </div>
-
+						
+<!-- 						<div class="mb-3"> -->
+<!--                             <label for="file" class="form-label">Profile CSV 업로드</label> -->
+<!--                             <input type="file" class="form-control" id="file" name="file" accept=".csv" required> -->
+<!--                         </div> -->
+						
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">조 편성 시작</button>
+                            <button id="assignButton" type="button" class="btn btn-primary">조 편성</button>
                         </div>
                     </form>
 
@@ -42,7 +48,7 @@
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">250723 v0.1 - 초기 버전 배포</li>
                         <!-- 추후 버전 정보는 아래에 추가 -->
-                        <li class="list-group-item">v0.2 - 버그 수정 및 UI 개선</li>
+                        <!--<li class="list-group-item">v0.2 - 버그 수정 및 UI 개선</li>-->
                     </ul>
                 </div>
             </div>
@@ -52,4 +58,20 @@
 </div>
 
 </body>
+<script>
+const assignButton = document.getElementById("assignButton");
+
+assignButton.addEventListener('click', () => {
+  const numGroups = document.getElementById("numGroups").value;
+  const moduleNo = document.getElementById("moduleNo").value;
+  
+  if (!numGroups || !moduleNo) {
+    alert("조 개수와 모듈 번호를 입력해주세요!");
+    return;
+  }
+  
+  const assignForm = document.getElementById("assignForm");
+  assignForm.submit();
+});
+</script>
 </html>

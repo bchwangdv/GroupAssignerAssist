@@ -11,9 +11,10 @@ import lombok.ToString;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-public class Person {
-	private String name;
-	private String gender;
-	private String job;
-
+public class Person{
+	private String name; // 이름
+	private String gender; // 성별
+	private String job; // 직군
 }
+
+
