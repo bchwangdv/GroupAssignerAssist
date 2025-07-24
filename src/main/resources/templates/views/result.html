@@ -10,28 +10,27 @@
 <div class="container py-5">
     <h1 class="mb-4 text-center">모듈 [[${moduleNo}]] 조편성 결과</h1>
 
-    <div th:if="${groups == null or #lists.isEmpty(groups)}" class="alert alert-warning text-center">
+    <div th:if="${bestGroups == null or #lists.isEmpty(bestGroups)}" class="alert alert-warning text-center">
         조편성 결과가 없습니다.
     </div>
 
-    <div th:if="${groups != null and !#lists.isEmpty(groups)}">
-        <div th:each="group, iterStat : ${groups}" class="mb-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5>Group [[${iterStat.index + 1}]]</h5>
-                </div>
-                <ul class="list-group list-group-flush">
-                    <li th:each="person : ${group}" class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>[[${person.name}]] ([[${person.gender}]])</span>
-                        <span class="badge bg-secondary">[[${person.job}]]</span>
-                    </li>
-                </ul>
-            </div>
-        </div>
+    <div th:if="${bestGroups != null and !#lists.isEmpty(bestGroups)}">
+		<div th:each="group, iterStat : ${bestGroups}">
+			<div class="card">
+				<div class="card-header">
+				Group [[${iterStat.index + 1}]]
+				</div>
+				<ul>
+					<li th:each="person : ${group}">
+						[[${person.name}]] ([[${person.gender}]]) - [[${person.job}]]
+					</li>
+				</ul>
+			</div>
+		</div>
 
         <div class="text-center mt-4">
             <!-- CSV 다운로드 버튼 -->
-            <a th:href="@{/downloadCsv(moduleNo=${moduleNo})}" class="btn btn-success">
+            <a th:href="@{/downloadCsv}" class="btn btn-success">
                 CSV 파일 다운로드
             </a>
         </div>

@@ -17,21 +17,16 @@
                 <div class="card-body">
                     <h2 class="card-title mb-4 text-center">aSSIST 조 편성 프로그램 v0.1</h2>
 
-                    <form id="assignForm" action="loadStudentFromProfile" method="get">
+                    <form id="assignForm" action="result" method="post" enctype="multipart/form-data">
                         <div class="mb-3">
                             <label for="numGroups" class="form-label">조 개수</label>
                             <input type="number" class="form-control" id="numGroups" name="numGroups" min="1">
                         </div>
 
-                        <div class="mb-3">
-                            <label for="moduleNo" class="form-label">모듈 번호</label>
-                            <input type="number" class="form-control" id="moduleNo" name="moduleNo" min="1">
+						<div class="mb-3">
+                            <label for="profile" class="form-label">Profile 업로드</label>
+                            <input type="file" class="form-control" id="profile" name="profile" accept=".csv" required>
                         </div>
-						
-<!-- 						<div class="mb-3"> -->
-<!--                             <label for="file" class="form-label">Profile CSV 업로드</label> -->
-<!--                             <input type="file" class="form-control" id="file" name="file" accept=".csv" required> -->
-<!--                         </div> -->
 						
                         <div class="d-grid">
                             <button id="assignButton" type="button" class="btn btn-primary">조 편성</button>
@@ -63,10 +58,9 @@ const assignButton = document.getElementById("assignButton");
 
 assignButton.addEventListener('click', () => {
   const numGroups = document.getElementById("numGroups").value;
-  const moduleNo = document.getElementById("moduleNo").value;
   
-  if (!numGroups || !moduleNo) {
-    alert("조 개수와 모듈 번호를 입력해주세요!");
+  if (!numGroups) {
+    alert("조 개수를 입력해주세요!");
     return;
   }
   
