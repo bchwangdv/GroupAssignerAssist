@@ -5,12 +5,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -23,6 +21,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
@@ -97,23 +96,37 @@ public class GroupAssignerAssistController {
     }
     
     public static int evaluateGroupScore(List<List<Person>> groups) {
+        int totalMale = 0;
+        int totalFemale = 0;
+
+        // 전체 성비 계산
+        for (List<Person> group : groups) {
+            for (Person p : group) {
+                if (p.getGender().equals("M")) totalMale++;
+                else if (p.getGender().equals("F")) totalFemale++;
+            }
+        }
+
+        int numGroups = groups.size();
+        double idealMalePerGroup = (double) totalMale / numGroups;
+        double idealFemalePerGroup = (double) totalFemale / numGroups;
+
         int score = 0;
 
         for (List<Person> group : groups) {
             int maleCount = 0;
             int femaleCount = 0;
-            Set<String> jobSet = new HashSet<>();
 
             for (Person p : group) {
-                if(p.getGender().equals("M")) maleCount++;
-                if(p.getGender().equals("F")) femaleCount++;
-
-                jobSet.add(p.getJob());
+                if (p.getGender().equals("M")) maleCount++;
+                else if (p.getGender().equals("F")) femaleCount++;
             }
 
-            score -= Math.abs(maleCount - femaleCount); // 성비 균형
-            score += jobSet.size(); // 직업
+            // 이상적인 수와의 차이를 줄일수록 높은 점수
+            score -= Math.abs(maleCount - idealMalePerGroup);
+            score -= Math.abs(femaleCount - idealFemalePerGroup);
         }
+
         return score;
     }
 
@@ -130,7 +143,11 @@ public class GroupAssignerAssistController {
                 bestScore = score;
                 bestGroups = groups;
             }
-            
+        }
+        if (bestGroups != null) {
+            for (List<Person> group : bestGroups) {
+                group.sort(Comparator.comparing(Person::getName));
+            }
         }
         return bestGroups;
     }
@@ -207,6 +224,8 @@ public class GroupAssignerAssistController {
 	            List<Person> group = bestGroups.get(i);
 	            int groupNumber = i + 1;
 
+	            int groupStartRow = rowIdx; // 그룹 시작 위치 기억
+
 	            for (Person p : group) {
 	                Row row = sheet.createRow(rowIdx++);
 	                row.createCell(0).setCellValue(groupNumber);
@@ -216,6 +235,16 @@ public class GroupAssignerAssistController {
 	                for (int j = 0; j < columns.length; j++) {
 	                    row.getCell(j).setCellStyle(dataStyle);
 	                }
+	            }
+
+	            // 그룹번호 셀 병합 (1개 초과인 경우만)
+	            if (group.size() > 1) {
+	                sheet.addMergedRegion(new CellRangeAddress(
+	                    groupStartRow,        // 시작 행
+	                    rowIdx - 1,           // 끝 행
+	                    0,                    // 시작 열 (Group 컬럼)
+	                    0                     // 끝 열
+	                ));
 	            }
 	        }
 

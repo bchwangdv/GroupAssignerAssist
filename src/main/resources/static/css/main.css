@@ -1,0 +1,12 @@
+@charset "UTF-8";
+.btn-custom-purple {
+    background-color: #7A3E87;
+    color: #fff;
+    border: none;
+}
+
+.btn-custom-purple:hover {
+    background-color: #45004D;
+    color: #fff;
+    border: none;
+}
