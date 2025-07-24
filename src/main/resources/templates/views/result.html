@@ -4,35 +4,53 @@
     <meta charset="UTF-8" />
     <title>조편성 결과</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/result.css" />
 </head>
 <body class="bg-light">
 
 <div class="container py-5">
-    <h1 class="mb-4 text-center">모듈 [[${moduleNo}]] 조편성 결과</h1>
 
+    <!-- 좌상단 Home 버튼 -->
+    <div class="mb-3">
+        <a href="/" class="btn btn-outline-secondary">&larr; 메인으로</a>
+    </div>
+
+    <h1 class="mb-4 text-center">
+        모듈 <span th:text="${moduleNo}"></span> 조편성 결과
+    </h1>
+
+    <!-- reroll(새로고침) + Excel 다운로드 버튼 -->
+    <div class="text-center mb-4 d-flex justify-content-center gap-2">
+        <button onclick="location.reload()" class="btn btn-warning">&#x21bb; 재편성 </button>
+        <a th:href="@{downloadExcel}" class="btn btn-success">현재 조편성 다운로드(.xlsx)</a>
+    </div>
+
+    <!-- 조편성 결과 없을 때 -->
     <div th:if="${bestGroups == null or #lists.isEmpty(bestGroups)}" class="alert alert-warning text-center">
         조편성 결과가 없습니다.
     </div>
 
+    <!-- 조편성 결과 표시 -->
     <div th:if="${bestGroups != null and !#lists.isEmpty(bestGroups)}">
-		<div th:each="group, iterStat : ${bestGroups}">
-			<div class="card">
-				<div class="card-header">
-				Group [[${iterStat.index + 1}]]
-				</div>
-				<ul>
-					<li th:each="person : ${group}">
-						[[${person.name}]] ([[${person.gender}]]) - [[${person.job}]]
-					</li>
-				</ul>
-			</div>
-		</div>
-
-        <div class="text-center mt-4">
-            <!-- CSV 다운로드 버튼 -->
-            <a th:href="@{/downloadCsv}" class="btn btn-success">
-                CSV 파일 다운로드
-            </a>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
+            <div class="col" th:each="group, iterStat : ${bestGroups}">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header text-dark"
+                         th:classappend="' pastel-' + ${(iterStat.index % 10) + 1}">
+                        Group <span th:text="${iterStat.index + 1}"></span>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li th:each="person : ${group}" class="list-group-item d-flex justify-content-between align-items-center">
+                            <span th:text="${person.name}"></span>
+                            <span 
+                                class="gender-badge"
+                                th:classappend="${person.gender.toUpperCase} == 'M' ? 'male' : (${person.gender.toUpperCase} == 'F' ? 'female' : '')"
+                                th:text="${person.gender}">
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 </div>

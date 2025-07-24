@@ -1,0 +1,35 @@
+@charset "UTF-8";
+
+.pastel-1 { background-color: #FFEBEE; }
+.pastel-2 { background-color: #E8F5E9; }
+.pastel-3 { background-color: #E3F2FD; }
+.pastel-4 { background-color: #FFF8E1; }
+.pastel-5 { background-color: #F3E5F5; }
+.pastel-6 { background-color: #E0F7FA; }
+.pastel-7 { background-color: #FCE4EC; }
+.pastel-8 { background-color: #F1F8E9; }
+.pastel-9 { background-color: #EDE7F6; }
+.pastel-10 { background-color: #FFF3E0; }
+
+.gender-badge {
+  display: inline-block;
+  width: 50px;           /* 고정 너비 */
+  padding: 4px 0;        /* 위아래 약간 패딩 */
+  border-radius: 12px;   /* 둥근 모서리 */
+  color: white;
+  font-weight: 600;
+  text-align: center;
+  cursor: default;
+  user-select: none;
+  transition: background-color 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.gender-badge.male {
+  background-color: #4a90e2;   /* 모던 블루 */
+}
+
+.gender-badge.female {
+  background-color: #e57373;   /* 부드러운 레드 */
+}
+
