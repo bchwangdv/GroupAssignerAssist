@@ -65,7 +65,7 @@
 						            <strong>이전 조편성 파일 업로드<span class="text-danger">*</span></strong><br>
 						            <small class="text-muted">* 반드시 우측 양식 다운로드 받아 사용</small>
 						        </span>
-						        <a href="downloadPreviousTemplate" class="btn btn-sm btn-outline-secondary" id="downloadTemplateBtn">이전 조편성 양식 다운로드</a>
+						        <a href="downloadPreviousTemplate" class="btn btn-sm btn-outline-secondary" id="downloadPreTemplateBtn">이전 조편성 양식 다운로드</a>
 						    </label>
 						    <input type="file" class="form-control" name="previousGroups" id="previousGroups" accept=".xlsx">
 						</div>
@@ -157,6 +157,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
     downloadBtn.addEventListener("click", function (e) {
         const proceed = confirm("Profile 양식을 다운로드 합니다. 계속하시겠습니까?");
+        if (!proceed) {
+            e.preventDefault(); // 다운로드 중단
+        }
+    });
+});
+
+//다운로드 확인
+document.addEventListener("DOMContentLoaded", function () {
+    const downloadBtn = document.getElementById("downloadPreTemplateBtn");
+
+    downloadBtn.addEventListener("click", function (e) {
+        const proceed = confirm("이전 조편성 양식을 다운로드 합니다. 계속하시겠습니까?");
         if (!proceed) {
             e.preventDefault(); // 다운로드 중단
         }
