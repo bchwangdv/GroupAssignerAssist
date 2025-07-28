@@ -19,38 +19,55 @@
                     <h2 class="card-title mb-4 text-center">Aalto EMBA 조 편성 프로그램 v0.2</h2>
 
                     <form id="assignForm" action="result" method="post" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <label for="numGroups" class="form-label">조 개수<span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="numGroups" name="numGroups" min="1">
-                        </div>
-
-						<div class="mb-3">
+                        <!-- 조 개수 -->
+						<div class="mb-5">
+						    <label for="numGroups" class="form-label">
+						        <strong>조 개수<span class="text-danger">*</span></strong>
+						    </label>
+						    <input type="number" class="form-control" id="numGroups" name="numGroups" min="1">
+						</div>
+						
+						<!-- Profile 업로드 -->
+						<div class="mb-5">
 						    <label class="form-label d-flex justify-content-between align-items-center">
-						        <span>Profile 업로드<span class="text-danger">*</span><br>
-						        <small class="text-muted">* 반드시 우측 양식 다운로드 받아 사용</small>
+						        <span>
+						            <strong>Profile 업로드<span class="text-danger">*</span></strong><br>
+						            <small class="text-muted">* 반드시 우측 양식 다운로드 받아 사용</small>
 						        </span>
-						        
-						        <a href="downloadProfileTemplate" class="btn btn-sm btn-outline-secondary" id="downloadTemplateBtn">양식 다운로드</a>
+						        <a href="downloadProfileTemplate" class="btn btn-sm btn-outline-secondary" id="downloadTemplateBtn">Profile 양식 다운로드</a>
 						    </label>
 						    <input type="file" class="form-control" id="profile" name="profile" accept=".xlsx" required>
 						</div>
 						
-					    <div class="mb-3">
-					        <label class="form-label">조편성 고려사항 (선택)</label><br>
-					        <div class="form-check">
-					            <input class="form-check-input" type="checkbox" name="criteria" value="gender" id="checkGender">
-					            <label class="form-check-label" for="checkGender">성비</label>
-					        </div>
-					        <div class="form-check">
-					            <input class="form-check-input" type="checkbox" name="criteria" value="previous" id="checkPrevious">
-					            <label class="form-check-label" for="checkPrevious">이전 조편성</label>
-					        </div>
-					    </div>
+						<!-- 고려사항 -->
+						<div class="mb-4">
+						    <label class="form-label">
+						        <strong>조편성 고려사항 (선택)</strong>
+						    </label><br>
+						    <small class="text-muted">*둘 다 선택 시 이전 조편성이 우선 고려됨</small><br>
 						
-						<div class="mb-3" id="previousGroupUpload" style="display: none;">
-						    <label class="form-label">이전 조편성 파일<span class="text-danger">*</span></label>
-						    <input type="file" class="form-control" name="previousGroups" id="previousGroups" multiple accept=".xlsx">
-						    <small class="text-muted">* 동일 양식으로 된 과거 조편성 결과 업로드</small>
+						    <div class="border rounded p-3 bg-light">
+						        <div class="form-check">
+						            <input class="form-check-input" type="checkbox" name="criteria" value="gender" id="checkGender">
+						            <label class="form-check-label" for="checkGender">성비</label>
+						        </div>
+						        <div class="form-check">
+						            <input class="form-check-input" type="checkbox" name="criteria" value="previous" id="checkPrevious">
+						            <label class="form-check-label" for="checkPrevious">이전 조편성</label>
+						        </div>
+						    </div>
+						</div>
+						
+						<!-- 이전 조편성 업로드 -->
+						<div class="mb-4" id="previousGroupUpload" style="display: none;">
+						    <label class="form-label d-flex justify-content-between align-items-center">
+						        <span>
+						            <strong>이전 조편성 파일 업로드<span class="text-danger">*</span></strong><br>
+						            <small class="text-muted">* 반드시 우측 양식 다운로드 받아 사용</small>
+						        </span>
+						        <a href="downloadPreviousTemplate" class="btn btn-sm btn-outline-secondary" id="downloadTemplateBtn">이전 조편성 양식 다운로드</a>
+						    </label>
+						    <input type="file" class="form-control" name="previousGroups" id="previousGroups" accept=".xlsx">
 						</div>
 						
                         <div class="d-grid">
@@ -68,10 +85,7 @@
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">250724 v0.1 - 초기 버전 배포 (성비 반영 조편성)</li>
                         <!-- 추후 버전 정보는 아래에 추가 -->
-                        <li class="list-group-item">250728 v0.2 - 업데이트 실시 (이전 조편성 반영 조편성)</li>
-                        <li class="list-group-item">　</li>
-                        <li class="list-group-item">　</li>
-                        <li class="list-group-item">　</li>
+                        <li class="list-group-item">250728 v0.2 - 업데이트 실시 (중복 반영 조편성)</li>
                     </ul>
                 </div>
             </div>

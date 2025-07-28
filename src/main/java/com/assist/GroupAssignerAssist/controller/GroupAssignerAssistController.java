@@ -9,11 +9,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -65,16 +62,14 @@ public class GroupAssignerAssistController {
 
 	            Cell nameCell = row.getCell(0, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
 	            Cell genderCell = row.getCell(1, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-	            Cell jobCell = row.getCell(2, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
 
 	            String name = nameCell.toString().trim();
 	            String gender = genderCell.toString().trim();
-	            String job = jobCell.toString().trim();
 
 	            // 빈 값 스킵
-	            if (name.isEmpty() || gender.isEmpty() || job.isEmpty()) continue;
+	            if (name.isEmpty() || gender.isEmpty()) continue;
 
-	            people.add(new Person(name, gender, job));
+	            people.add(new Person(name, gender));
 	        }
 
 	    } catch (IOException e) {
@@ -138,30 +133,51 @@ public class GroupAssignerAssistController {
     public static List<List<List<String>>> loadPreviousGroupings(MultipartFile file) {
         List<List<List<String>>> result = new ArrayList<>();
 
-        try (InputStream is = file.getInputStream();
-             Workbook workbook = new XSSFWorkbook(is)) {
+        try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
+            Sheet sheet = workbook.getSheetAt(0);
+            Row header = sheet.getRow(0);
+            if (header == null) {
+                return result;
+            }
 
-            for (int s = 0; s < workbook.getNumberOfSheets(); s++) {
-                Sheet sheet = workbook.getSheetAt(s);
-                List<List<String>> sheetGroups = new ArrayList<>();
-                int colCount = sheet.getRow(0).getPhysicalNumberOfCells() / 2; // Group + Name 열이 반복
+            int columnCount = header.getPhysicalNumberOfCells();
+            int roundCount = columnCount / 2;
 
-                for (int col = 0; col < colCount; col++) {
-                    List<String> group = new ArrayList<>();
-                    for (int rowIdx = 1; rowIdx <= sheet.getLastRowNum(); rowIdx++) {
-                        Row row = sheet.getRow(rowIdx);
-                        if (row == null) continue;
-                        Cell nameCell = row.getCell(col * 2 + 1);
-                        if (nameCell != null && !nameCell.toString().trim().isEmpty()) {
-                            group.add(nameCell.toString().trim());
-                        }
+            for (int round = 0; round < roundCount; round++) {
+                int groupCol = round * 2;
+                int nameCol = groupCol + 1;
+
+                Map<Integer, List<String>> groupMap = new HashMap<>();
+
+                for (int rowIdx = 1; rowIdx <= sheet.getLastRowNum(); rowIdx++) {
+                    Row row = sheet.getRow(rowIdx);
+                    if (row == null) continue;
+
+                    Cell groupCell = row.getCell(groupCol);
+                    Cell nameCell = row.getCell(nameCol);
+                    if (groupCell == null || nameCell == null) continue;
+
+                    String name = nameCell.toString().trim();
+                    if (name.isEmpty()) continue;
+
+                    int groupNum;
+                    try {
+                        groupNum = (int) groupCell.getNumericCellValue();
+                    } catch (Exception e) {
+                        continue;
                     }
-                    if (!group.isEmpty()) {
-                        sheetGroups.add(group);
-                    }
+
+                    groupMap.computeIfAbsent(groupNum, k -> new ArrayList<>()).add(name);
                 }
 
-                result.add(sheetGroups);
+                List<Integer> sortedKeys = new ArrayList<>(groupMap.keySet());
+                Collections.sort(sortedKeys);
+                List<List<String>> groups = new ArrayList<>();
+                for (Integer key : sortedKeys) {
+                    groups.add(groupMap.get(key));
+                }
+
+                result.add(groups);
             }
 
         } catch (IOException e) {
@@ -171,68 +187,30 @@ public class GroupAssignerAssistController {
         return result;
     }
     
-    public static List<List<Person>> assignBestGrouping(
-            List<Person> people,
-            int numGroups,
-            int trialCount,
-            List<String> criteria,
-            List<List<List<String>>> previousGroupings // 하나의 파일에서 추출한 시트 구조
-    ) {
-        Map<String, Set<String>> previousPartners = new HashMap<>();
+    public static Map<String, Map<String, Integer>> buildOverlapMap(List<List<List<String>>> previousGroupings) {
+        Map<String, Map<String, Integer>> overlapCount = new HashMap<>();
 
-        // 이전 조편성 고려: 파트너 관계 구성
-        if (criteria.contains("previous") && previousGroupings != null) {
-            for (List<List<String>> grouping : previousGroupings) {
-                for (List<String> group : grouping) {
-                    for (String person : group) {
-                        previousPartners.putIfAbsent(person, new HashSet<>());
-                        for (String other : group) {
-                            if (!other.equals(person)) {
-                                previousPartners.get(person).add(other);
-                            }
-                        }
+        for (List<List<String>> grouping : previousGroupings) {
+            for (List<String> group : grouping) {
+                for (int i = 0; i < group.size(); i++) {
+                    for (int j = i + 1; j < group.size(); j++) {
+                        String p1 = group.get(i);
+                        String p2 = group.get(j);
+
+                        overlapCount.computeIfAbsent(p1, k -> new HashMap<>()).merge(p2, 1, Integer::sum);
+                        overlapCount.computeIfAbsent(p2, k -> new HashMap<>()).merge(p1, 1, Integer::sum);
                     }
                 }
             }
         }
 
-        int bestScore = Integer.MIN_VALUE;
-        List<List<Person>> bestGroups = null;
-
-        for (int t = 0; t < trialCount; t++) {
-            Collections.shuffle(people);
-            List<List<Person>> groups = new ArrayList<>();
-            for (int i = 0; i < numGroups; i++) groups.add(new ArrayList<>());
-            for (int i = 0; i < people.size(); i++) {
-                groups.get(i % numGroups).add(people.get(i));
-            }
-
-            int score = 0;
-
-            if (criteria.contains("gender")) {
-                score += evaluateGenderScore(groups);
-            }
-            if (criteria.contains("previous")) {
-                score += evaluatePreviousOverlapPenalty(groups, previousPartners);
-            }
-
-            if (score > bestScore) {
-                bestScore = score;
-                bestGroups = deepCopy(groups);
-            }
-        }
-
-        if (bestGroups != null) {
-            for (List<Person> group : bestGroups) {
-                group.sort(Comparator.comparing(Person::getName));
-            }
-        }
-
-        return bestGroups;
+        return overlapCount;
     }
-
-    // 👉 이전 조편성 중복 회피 점수 평가 (중복 1쌍당 -10점)
-    private static int evaluatePreviousOverlapPenalty(List<List<Person>> groups, Map<String, Set<String>> previousGroups) {
+    
+    public static int evaluatePreviousOverlapPenalty(
+            List<List<Person>> groups,
+            Map<String, Map<String, Integer>> overlapCountMap
+    ) {
         int penalty = 0;
 
         for (List<Person> group : groups) {
@@ -241,8 +219,12 @@ public class GroupAssignerAssistController {
                     String name1 = group.get(i).getName();
                     String name2 = group.get(j).getName();
 
-                    if (previousGroups.getOrDefault(name1, Set.of()).contains(name2)) {
-                        penalty -= 10;
+                    int overlap = overlapCountMap
+                        .getOrDefault(name1, Collections.emptyMap())
+                        .getOrDefault(name2, 0);
+
+                    if (overlap > 0) {
+                        penalty -= 50; // 이전 라운드에 함께한 적이 있다면 페널티 부과
                     }
                 }
             }
@@ -250,46 +232,57 @@ public class GroupAssignerAssistController {
 
         return penalty;
     }
-
-    // 👉 깊은 복사
+    
     private static List<List<Person>> deepCopy(List<List<Person>> original) {
-        return original.stream()
-                .map(ArrayList::new)
-                .collect(Collectors.toList());
+        List<List<Person>> copy = new ArrayList<>();
+        for (List<Person> group : original) {
+            List<Person> groupCopy = new ArrayList<>();
+            for (Person p : group) {
+                groupCopy.add(new Person(p.getName(), p.getGender()));
+            }
+            copy.add(groupCopy);
+        }
+        return copy;
     }
     
     public static List<List<Person>> assignBestGrouping(
             List<Person> people,
             int numGroups,
             int trialCount,
-            List<String> criteria, // ← 체크된 고려사항 (ex: ["gender", "previous"])
-            Map<String, Set<String>> previousGroups // ← 이전 조편성 정보 (없으면 빈 Map)
+            List<String> criteria,
+            List<List<List<String>>> previousGroupings
     ) {
+        Map<String, Map<String, Integer>> overlapCountMap = new HashMap<>();
+        if (criteria.contains("previous") && previousGroupings != null) {
+            overlapCountMap = buildOverlapMap(previousGroupings);
+        }
+
         int bestScore = Integer.MIN_VALUE;
         List<List<Person>> bestGroups = null;
 
         for (int t = 0; t < trialCount; t++) {
             List<List<Person>> groups = splitIntoGroup(people, numGroups);
 
-            int score = 0;
+            int genderScore = 0;
+            int overlapPenalty = 0;
+            int totalScore = 0;
 
-            // ✅ 성비 고려 체크되었을 경우
             if (criteria.contains("gender")) {
-                score += evaluateGenderScore(groups);
+                genderScore = evaluateGenderScore(groups);
+                totalScore += genderScore;
             }
 
-            // ✅ 이전 조편성 회피 체크되었을 경우
             if (criteria.contains("previous")) {
-                score += evaluatePreviousOverlapPenalty(groups, previousGroups);
+                overlapPenalty = evaluatePreviousOverlapPenalty(groups, overlapCountMap);
+                totalScore += overlapPenalty;
             }
 
-            if (score > bestScore) {
-                bestScore = score;
-                bestGroups = groups;
+            if (totalScore > bestScore) {
+                bestScore = totalScore;
+                bestGroups = deepCopy(groups);
             }
         }
 
-        // 그룹 정렬
         if (bestGroups != null) {
             for (List<Person> group : bestGroups) {
                 group.sort(Comparator.comparing(Person::getName));
@@ -304,13 +297,13 @@ public class GroupAssignerAssistController {
             @RequestParam("numGroups") int numGroups,
             @RequestParam("profile") MultipartFile profile,
             @RequestParam(value = "criteria", required = false) List<String> criteria,
-            @RequestParam(value = "previousGroup", required = false) MultipartFile previousGroupFile,
+            @RequestParam(value = "previousGroups", required = false) MultipartFile previousGroupFile,
             HttpSession session,
             Model model) {
 
         List<Person> people = loadStudentFromProfile(profile);
         List<List<List<String>>> previousGroupings = new ArrayList<>();
-
+        
         if (criteria != null && criteria.contains("previous") && previousGroupFile != null && !previousGroupFile.isEmpty()) {
             previousGroupings = loadPreviousGroupings(previousGroupFile);
         }
@@ -343,14 +336,13 @@ public class GroupAssignerAssistController {
 	    try (Workbook workbook = new XSSFWorkbook()) {
 	        Sheet sheet = workbook.createSheet("조편성 결과");
 
-	        // 👉 헤더 스타일: 진한 보라색 + 흰 글씨 + 가운데 정렬
 	        CellStyle headerStyle = workbook.createCellStyle();
 	        Font headerFont = workbook.createFont();
 	        headerFont.setBold(true);
 	        headerFont.setFontHeightInPoints((short) 12);
 	        headerFont.setColor(IndexedColors.WHITE.getIndex());
 	        headerStyle.setFont(headerFont);
-	        headerStyle.setFillForegroundColor(IndexedColors.VIOLET.getIndex()); // 진한 보라색
+	        headerStyle.setFillForegroundColor(IndexedColors.VIOLET.getIndex());
 	        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 	        headerStyle.setAlignment(HorizontalAlignment.CENTER);
 	        headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
@@ -430,13 +422,31 @@ public class GroupAssignerAssistController {
 	public ResponseEntity<byte[]> downloadProfileTemplate() throws IOException {
 	    ClassPathResource resource = new ClassPathResource("static/profile.xlsx");
 
-	    // InputStream을 통해 파일 내용을 읽어들임
 	    byte[] fileData;
 	    try (InputStream inputStream = resource.getInputStream()) {
 	        fileData = inputStream.readAllBytes();
 	    }
 
 	    String filename = URLEncoder.encode("profile.xlsx", StandardCharsets.UTF_8)
+	                                 .replaceAll("\\+", "%20");
+
+	    return ResponseEntity.ok()
+	            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + filename)
+	            .contentType(MediaType.parseMediaType(
+	                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+	            .body(fileData);
+	}
+	
+	@GetMapping("downloadPreviousTemplate")
+	public ResponseEntity<byte[]> downloadPreviousTemplate() throws IOException {
+	    ClassPathResource resource = new ClassPathResource("static/previousGroup.xlsx");
+
+	    byte[] fileData;
+	    try (InputStream inputStream = resource.getInputStream()) {
+	        fileData = inputStream.readAllBytes();
+	    }
+
+	    String filename = URLEncoder.encode("previousGroup.xlsx", StandardCharsets.UTF_8)
 	                                 .replaceAll("\\+", "%20");
 
 	    return ResponseEntity.ok()

@@ -14,7 +14,6 @@ import lombok.ToString;
 public class Person{
 	private String name; // 이름
 	private String gender; // 성별
-	private String job; // 직군
 }
 
 
