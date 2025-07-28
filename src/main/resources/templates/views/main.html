@@ -16,7 +16,7 @@
 
             <div class="card shadow-sm rounded mb-4">
                 <div class="card-body">
-                    <h2 class="card-title mb-4 text-center">Aalto EMBA 조 편성 프로그램 v0.1</h2>
+                    <h2 class="card-title mb-4 text-center">Aalto EMBA 조 편성 프로그램 v0.2</h2>
 
                     <form id="assignForm" action="result" method="post" enctype="multipart/form-data">
                         <div class="mb-3">
@@ -30,9 +30,27 @@
 						        <small class="text-muted">* 반드시 우측 양식 다운로드 받아 사용</small>
 						        </span>
 						        
-						        <a href="downloadProfileTemplate" class="btn btn-sm btn-outline-secondary">양식 다운로드</a>
+						        <a href="downloadProfileTemplate" class="btn btn-sm btn-outline-secondary" id="downloadTemplateBtn">양식 다운로드</a>
 						    </label>
 						    <input type="file" class="form-control" id="profile" name="profile" accept=".xlsx" required>
+						</div>
+						
+					    <div class="mb-3">
+					        <label class="form-label">조편성 고려사항 (선택)</label><br>
+					        <div class="form-check">
+					            <input class="form-check-input" type="checkbox" name="criteria" value="gender" id="checkGender">
+					            <label class="form-check-label" for="checkGender">성비</label>
+					        </div>
+					        <div class="form-check">
+					            <input class="form-check-input" type="checkbox" name="criteria" value="previous" id="checkPrevious">
+					            <label class="form-check-label" for="checkPrevious">이전 조편성</label>
+					        </div>
+					    </div>
+						
+						<div class="mb-3" id="previousGroupUpload" style="display: none;">
+						    <label class="form-label">이전 조편성 파일<span class="text-danger">*</span></label>
+						    <input type="file" class="form-control" name="previousGroups" id="previousGroups" multiple accept=".xlsx">
+						    <small class="text-muted">* 동일 양식으로 된 과거 조편성 결과 업로드</small>
 						</div>
 						
                         <div class="d-grid">
@@ -48,9 +66,9 @@
                 <div class="card-body">
                     <h5 class="card-title mb-3">패치노트</h5>
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item">250724 v0.1 - 초기 버전 배포 (성비 고려 조편성)</li>
+                        <li class="list-group-item">250724 v0.1 - 초기 버전 배포 (성비 반영 조편성)</li>
                         <!-- 추후 버전 정보는 아래에 추가 -->
-                        <li class="list-group-item">　</li>
+                        <li class="list-group-item">250728 v0.2 - 업데이트 실시 (이전 조편성 반영 조편성)</li>
                         <li class="list-group-item">　</li>
                         <li class="list-group-item">　</li>
                         <li class="list-group-item">　</li>
@@ -61,15 +79,18 @@
     </div>
 </div>
 <!-- footer -->
-<div th:replace="/footer :: footer"></div>
+<div th:replace="~{footer :: footer}"></div>
 </body>
 <script>
 const assignButton = document.getElementById("assignButton");
 
 assignButton.addEventListener('click', () => {
-	const numGroups = document.getElementById("numGroups").value;
-	const profileFile = document.getElementById("profile").files[0];
-	
+    const numGroups = document.getElementById("numGroups").value;
+    const profileFile = document.getElementById("profile").files[0];
+    const checkPrevious = document.getElementById("checkPrevious");
+    const previousGroupsInput = document.getElementById("previousGroups"); // ← 이 줄 추가
+    const previousFiles = previousGroupsInput ? previousGroupsInput.files : [];
+    
 	if (!numGroups) {
 		alert("조 개수를 입력해주세요!");
 		return;
@@ -79,9 +100,53 @@ assignButton.addEventListener('click', () => {
 		alert("Profile을 업로드해주세요!");
 		return;
 	}
-  
-	const assignForm = document.getElementById("assignForm");
-	assignForm.submit();
+
+    // 고려사항 체크 여부 확인
+    const criteriaChecked = document.querySelectorAll('input[name="criteria"]:checked').length > 0;
+
+    if (!criteriaChecked) {
+        const proceed = confirm("고려 사항을 선택하지 않은 경우 완전 무작위 편성 됩니다.\n계속 진행하시겠습니까?");
+        if (!proceed) return;
+    }
+	
+    // '이전 조편성' 고려 시 파일이 반드시 업로드되어야 함
+    if (checkPrevious.checked && previousFiles.length === 0) {
+        alert("이전 조편성을 고려하려면 이전 조편성 파일을 업로드해야 합니다.");
+        return;
+    }
+    
+    // 제출
+    document.getElementById("assignForm").submit();
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    const checkPrevious = document.getElementById("checkPrevious");
+    const uploadBox = document.getElementById("previousGroupUpload");
+    const fileInput = document.getElementById("previousGroups");
+
+    checkPrevious.addEventListener("change", function () {
+        uploadBox.style.display = this.checked ? "block" : "none";
+        if (!this.checked) fileInput.value = ""; // 체크 해제 시 파일 초기화
+    });
+
+    fileInput.addEventListener("change", function () {
+        if (this.files.length > 6) {
+            alert("최대 6개의 파일만 업로드할 수 있습니다.");
+            this.value = "";
+        }
+    });
+});
+
+//다운로드 확인
+document.addEventListener("DOMContentLoaded", function () {
+    const downloadBtn = document.getElementById("downloadTemplateBtn");
+
+    downloadBtn.addEventListener("click", function (e) {
+        const proceed = confirm("Profile 양식을 다운로드 합니다. 계속하시겠습니까?");
+        if (!proceed) {
+            e.preventDefault(); // 다운로드 중단
+        }
+    });
 });
 </script>
 </html>

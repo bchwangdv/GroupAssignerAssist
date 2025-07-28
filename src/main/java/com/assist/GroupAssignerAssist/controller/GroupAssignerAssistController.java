@@ -8,7 +8,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -95,7 +100,7 @@ public class GroupAssignerAssistController {
         return groups;
     }
     
-    public static int evaluateGroupScore(List<List<Person>> groups) {
+    public static int evaluateGenderScore(List<List<Person>> groups) {
         int totalMale = 0;
         int totalFemale = 0;
 
@@ -129,47 +134,201 @@ public class GroupAssignerAssistController {
 
         return score;
     }
+    
+    public static List<List<List<String>>> loadPreviousGroupings(MultipartFile file) {
+        List<List<List<String>>> result = new ArrayList<>();
 
-    public static List<List<Person>> assignBestGrouping(List<Person> people, int numGroups, int trialCount) {
+        try (InputStream is = file.getInputStream();
+             Workbook workbook = new XSSFWorkbook(is)) {
 
-        int bestScore = Integer.MIN_VALUE;
-        List<List<Person>> bestGroups= null;
+            for (int s = 0; s < workbook.getNumberOfSheets(); s++) {
+                Sheet sheet = workbook.getSheetAt(s);
+                List<List<String>> sheetGroups = new ArrayList<>();
+                int colCount = sheet.getRow(0).getPhysicalNumberOfCells() / 2; // Group + Name 열이 반복
 
-        for (int t = 0; t < trialCount; t++) {
+                for (int col = 0; col < colCount; col++) {
+                    List<String> group = new ArrayList<>();
+                    for (int rowIdx = 1; rowIdx <= sheet.getLastRowNum(); rowIdx++) {
+                        Row row = sheet.getRow(rowIdx);
+                        if (row == null) continue;
+                        Cell nameCell = row.getCell(col * 2 + 1);
+                        if (nameCell != null && !nameCell.toString().trim().isEmpty()) {
+                            group.add(nameCell.toString().trim());
+                        }
+                    }
+                    if (!group.isEmpty()) {
+                        sheetGroups.add(group);
+                    }
+                }
 
-            List<List<Person>> groups = splitIntoGroup(people, numGroups);
-            int score = evaluateGroupScore(groups);
-            if(score > bestScore) {
-                bestScore = score;
-                bestGroups = groups;
+                result.add(sheetGroups);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+    
+    public static List<List<Person>> assignBestGrouping(
+            List<Person> people,
+            int numGroups,
+            int trialCount,
+            List<String> criteria,
+            List<List<List<String>>> previousGroupings // 하나의 파일에서 추출한 시트 구조
+    ) {
+        Map<String, Set<String>> previousPartners = new HashMap<>();
+
+        // 이전 조편성 고려: 파트너 관계 구성
+        if (criteria.contains("previous") && previousGroupings != null) {
+            for (List<List<String>> grouping : previousGroupings) {
+                for (List<String> group : grouping) {
+                    for (String person : group) {
+                        previousPartners.putIfAbsent(person, new HashSet<>());
+                        for (String other : group) {
+                            if (!other.equals(person)) {
+                                previousPartners.get(person).add(other);
+                            }
+                        }
+                    }
+                }
             }
         }
+
+        int bestScore = Integer.MIN_VALUE;
+        List<List<Person>> bestGroups = null;
+
+        for (int t = 0; t < trialCount; t++) {
+            Collections.shuffle(people);
+            List<List<Person>> groups = new ArrayList<>();
+            for (int i = 0; i < numGroups; i++) groups.add(new ArrayList<>());
+            for (int i = 0; i < people.size(); i++) {
+                groups.get(i % numGroups).add(people.get(i));
+            }
+
+            int score = 0;
+
+            if (criteria.contains("gender")) {
+                score += evaluateGenderScore(groups);
+            }
+            if (criteria.contains("previous")) {
+                score += evaluatePreviousOverlapPenalty(groups, previousPartners);
+            }
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestGroups = deepCopy(groups);
+            }
+        }
+
         if (bestGroups != null) {
             for (List<Person> group : bestGroups) {
                 group.sort(Comparator.comparing(Person::getName));
             }
         }
+
+        return bestGroups;
+    }
+
+    // 👉 이전 조편성 중복 회피 점수 평가 (중복 1쌍당 -10점)
+    private static int evaluatePreviousOverlapPenalty(List<List<Person>> groups, Map<String, Set<String>> previousGroups) {
+        int penalty = 0;
+
+        for (List<Person> group : groups) {
+            for (int i = 0; i < group.size(); i++) {
+                for (int j = i + 1; j < group.size(); j++) {
+                    String name1 = group.get(i).getName();
+                    String name2 = group.get(j).getName();
+
+                    if (previousGroups.getOrDefault(name1, Set.of()).contains(name2)) {
+                        penalty -= 10;
+                    }
+                }
+            }
+        }
+
+        return penalty;
+    }
+
+    // 👉 깊은 복사
+    private static List<List<Person>> deepCopy(List<List<Person>> original) {
+        return original.stream()
+                .map(ArrayList::new)
+                .collect(Collectors.toList());
+    }
+    
+    public static List<List<Person>> assignBestGrouping(
+            List<Person> people,
+            int numGroups,
+            int trialCount,
+            List<String> criteria, // ← 체크된 고려사항 (ex: ["gender", "previous"])
+            Map<String, Set<String>> previousGroups // ← 이전 조편성 정보 (없으면 빈 Map)
+    ) {
+        int bestScore = Integer.MIN_VALUE;
+        List<List<Person>> bestGroups = null;
+
+        for (int t = 0; t < trialCount; t++) {
+            List<List<Person>> groups = splitIntoGroup(people, numGroups);
+
+            int score = 0;
+
+            // ✅ 성비 고려 체크되었을 경우
+            if (criteria.contains("gender")) {
+                score += evaluateGenderScore(groups);
+            }
+
+            // ✅ 이전 조편성 회피 체크되었을 경우
+            if (criteria.contains("previous")) {
+                score += evaluatePreviousOverlapPenalty(groups, previousGroups);
+            }
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestGroups = groups;
+            }
+        }
+
+        // 그룹 정렬
+        if (bestGroups != null) {
+            for (List<Person> group : bestGroups) {
+                group.sort(Comparator.comparing(Person::getName));
+            }
+        }
+
         return bestGroups;
     }
     
-	@PostMapping("result")
-	public String result(
-		@RequestParam("numGroups") int numGroups,
-		@RequestParam("profile") MultipartFile profile,
-		HttpSession session,
-		Model model) {
-		
-		int trialCount = TRIAL_COUNT;
-		
-		List<Person> people = loadStudentFromProfile(profile);
-		List<List<Person>> bestGroups = assignBestGrouping(people, numGroups, trialCount);
-		
-		model.addAttribute("numGroups", numGroups);
-		model.addAttribute("bestGroups", bestGroups);
-		
-		session.setAttribute("bestGroups", bestGroups); // 다운로드를 위한 세션 저장
-		return "result";
-	}
+    @PostMapping("result")
+    public String result(
+            @RequestParam("numGroups") int numGroups,
+            @RequestParam("profile") MultipartFile profile,
+            @RequestParam(value = "criteria", required = false) List<String> criteria,
+            @RequestParam(value = "previousGroup", required = false) MultipartFile previousGroupFile,
+            HttpSession session,
+            Model model) {
+
+        List<Person> people = loadStudentFromProfile(profile);
+        List<List<List<String>>> previousGroupings = new ArrayList<>();
+
+        if (criteria != null && criteria.contains("previous") && previousGroupFile != null && !previousGroupFile.isEmpty()) {
+            previousGroupings = loadPreviousGroupings(previousGroupFile);
+        }
+
+        List<List<Person>> bestGroups = assignBestGrouping(
+                people,
+                numGroups,
+                TRIAL_COUNT,
+                criteria != null ? criteria : Collections.emptyList(),
+                previousGroupings
+        );
+
+        model.addAttribute("numGroups", numGroups);
+        model.addAttribute("bestGroups", bestGroups);
+        session.setAttribute("bestGroups", bestGroups);
+
+        return "result";
+    }
 	
 	@GetMapping("downloadExcel")
 	public ResponseEntity<byte[]> downloadExcel(HttpSession session) {
