@@ -4,44 +4,75 @@
     <meta charset="UTF-8" />
     <title>조편성 결과</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- (선택) Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
     <link rel="stylesheet" href="/css/result.css" />
 </head>
 <body class="bg-light">
 
 <div class="container py-5">
 
-    <!-- 좌상단 Home 버튼 -->
-    <div class="mb-3">
-        <a href="/" class="btn btn-outline-secondary">&larr; 메인으로</a>
+    <!-- 상단 액션바 -->
+    <div class="result-toolbar d-flex align-items-center justify-content-between mb-4">
+        <a href="/" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> 메인으로
+        </a>
+        <div class="d-flex gap-2">
+            <button onclick="location.reload()" class="btn btn-reroll">
+                <i class="bi bi-shuffle"></i> 재편성
+            </button>
+            <a th:href="@{downloadExcel}" class="btn btn-download">
+                <i class="bi bi-file-earmark-excel"></i> 현재 조편성 다운로드(.xlsx)
+            </a>
+        </div>
     </div>
 
-    <h1 class="mb-4 text-center">
-        모듈 <span th:text="${moduleNo}"></span> 조편성 결과
-    </h1>
-
-    <!-- reroll(새로고침) + Excel 다운로드 버튼 -->
-    <div class="text-center mb-4 d-flex justify-content-center gap-2">
-        <button onclick="location.reload()" class="btn btn-warning">&#x21bb; 재편성 </button>
-        <a th:href="@{downloadExcel}" class="btn btn-success">현재 조편성 다운로드(.xlsx)</a>
-    </div>
+    <!-- 타이틀 & 레전드 -->
+    <header class="text-center mb-4">
+        <h1 class="h3 fw-bold">
+            모듈 <span th:text="${moduleNo}"></span> 조편성 결과
+        </h1>
+        <div class="legend d-inline-flex align-items-center gap-3 mt-2">
+            <span class="legend-item">
+                <span class="gender-dot male"></span> 남성(M)
+            </span>
+            <span class="legend-item">
+                <span class="gender-dot female"></span> 여성(F)
+            </span>
+        </div>
+        <div class="text-muted small mt-2" th:if="${criteriaSummary != null}">
+            <!-- 서버에서 전달 가능: 예) 성비 고려, 이전 조편성 우선 -->
+            고려사항: <span th:text="${criteriaSummary}"></span>
+        </div>
+    </header>
 
     <!-- 조편성 결과 없을 때 -->
-    <div th:if="${bestGroups == null or #lists.isEmpty(bestGroups)}" class="alert alert-warning text-center">
+    <div th:if="${bestGroups == null or #lists.isEmpty(bestGroups)}" class="alert alert-warning text-center shadow-sm">
         조편성 결과가 없습니다.
     </div>
 
-    <!-- 조편성 결과 표시 -->
+    <!-- 조편성 결과 -->
     <div th:if="${bestGroups != null and !#lists.isEmpty(bestGroups)}">
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4">
             <div class="col" th:each="group, iterStat : ${bestGroups}">
-                <div class="card shadow-sm h-100">
-                    <div class="card-header text-dark"
+                <div class="card group-card h-100 shadow-sm">
+                    <div class="card-header group-header text-dark"
                          th:classappend="' pastel-' + ${(iterStat.index % 10) + 1}">
-                        Group <span th:text="${iterStat.index + 1}"></span>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="fw-semibold">
+                                Group <span th:text="${iterStat.index + 1}"></span>
+                            </div>
+                            <!-- 인원 수 뱃지 -->
+                            <span class="badge rounded-pill group-count"
+                                  th:text="${#lists.size(group)} + '명'">0명</span>
+                        </div>
                     </div>
                     <ul class="list-group list-group-flush">
                         <li th:each="person : ${group}" class="list-group-item d-flex justify-content-between align-items-center">
-                            <span th:text="${person.name}"></span>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-person-circle text-muted"></i>
+                                <span class="member-name" th:text="${person.name}"></span>
+                            </div>
                             <span 
                                 class="gender-badge"
                                 th:classappend="${person.gender.toUpperCase} == 'M' ? 'male' : (${person.gender.toUpperCase} == 'F' ? 'female' : '')"
@@ -50,6 +81,18 @@
                         </li>
                     </ul>
                 </div>
+            </div>
+        </div>
+
+        <!-- 하단 고정 액션바 -->
+        <div class="result-bottombar d-md-none">
+            <div class="container py-2 d-flex justify-content-center gap-2">
+                <button onclick="location.reload()" class="btn btn-reroll btn-sm">
+                    <i class="bi bi-shuffle"></i> 재편성
+                </button>
+                <a th:href="@{downloadExcel}" class="btn btn-download btn-sm">
+                    <i class="bi bi-file-earmark-excel"></i> 다운로드
+                </a>
             </div>
         </div>
     </div>

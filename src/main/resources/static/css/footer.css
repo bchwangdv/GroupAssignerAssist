@@ -1,0 +1,18 @@
+@charset "UTF-8";
+
+.footer-custom {
+    border-top: 3px solid var(--brand-purple);
+}
+.footer-link {
+    color: #fff;
+    text-decoration: underline;
+}
+.footer-link:hover {
+    color: var(--brand-purple);
+}
+.footer-divider {
+    border-top: 1px solid rgba(255,255,255,0.15);
+    width: 120px;
+    margin: 0 auto;
+}
+
