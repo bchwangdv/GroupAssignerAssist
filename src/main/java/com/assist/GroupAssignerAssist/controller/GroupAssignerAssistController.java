@@ -439,14 +439,14 @@ public class GroupAssignerAssistController {
 	
 	@GetMapping("downloadPreviousTemplate")
 	public ResponseEntity<byte[]> downloadPreviousTemplate() throws IOException {
-	    ClassPathResource resource = new ClassPathResource("static/previousGroups.xlsx");
+	    ClassPathResource resource = new ClassPathResource("static/previousgroups.xlsx");
 
 	    byte[] fileData;
 	    try (InputStream inputStream = resource.getInputStream()) {
 	        fileData = inputStream.readAllBytes();
 	    }
 
-	    String filename = URLEncoder.encode("previousGroups.xlsx", StandardCharsets.UTF_8)
+	    String filename = URLEncoder.encode("previousgroups.xlsx", StandardCharsets.UTF_8)
 	                                 .replaceAll("\\+", "%20");
 
 	    return ResponseEntity.ok()
