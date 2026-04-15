@@ -30,7 +30,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	
 	compileOnly 'org.projectlombok:lombok:edge-SNAPSHOT'
-	apt 'org.projectlombok:lombok:edge-SNAPSHOT'
+	annotationProcessor 'org.projectlombok:lombok:edge-SNAPSHOT'
 	
 	implementation 'org.springframework.boot:spring-boot-devtools'
 	// apache poi (Excel 사용)
