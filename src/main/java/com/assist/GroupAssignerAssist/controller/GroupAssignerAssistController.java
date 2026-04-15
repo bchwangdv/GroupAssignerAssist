@@ -224,7 +224,7 @@ public class GroupAssignerAssistController {
                         .getOrDefault(name2, 0);
 
                     if (overlap > 0) {
-                        penalty -= 0.5; // 이전 라운드에 함께한 적이 있다면 페널티 부과
+                        penalty -= 2; // 이전 라운드에 함께한 적이 있다면 페널티 부과
                     }
                 }
             }
