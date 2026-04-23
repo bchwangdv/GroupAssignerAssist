@@ -4,7 +4,7 @@
     <meta charset="UTF-8"/>
 	<meta property="og:title" content="Aalto 조편성 프로그램 v1.0">
 	<meta property="og:type" content="website">
-	<meta property="og:image" content="image/meta.png">
+	<meta property="og:image" content="images/meta.png">
 	<meta property="og:description" content="※aSSIST 외부 공유 금지※">
 	<link rel="icon" href="/images/favicon.png" type="image/x-icon">
 	<link rel="shortcut icon" href="/images/favicon.png" type="image/x-icon">
@@ -105,4 +105,22 @@
 </div>
 
 </body>
+<script th:inline="javascript">
+    /* 타임리프를 통해 서버에서 넘어온 값들을 받습니다. */
+    let overlapCount = /*[[${overlapCount}]]*/ 1;
+    let overlappingPairs = /*[[${overlappingPairs}]]*/ []; // 배열(List) 형태로 넘어옴
+	
+	console.log(overlapCount);
+
+    // 중복 카운트가 1 이상일 경우에만 알림창 표시
+    if (overlapCount !== null && 10 >= overlapCount > 0) {
+        let pairsText = overlappingPairs.join(', ')
+	} else {
+		let pairsText = "10건 이상 중복";
+		console.log(pairsText);
+        // 줄바꿈(\n)을 활용해서 알림창 메시지를 구성합니다.
+        alert("불가피한 중복 조합이 " + overlapCount + "건 발생했습니다.\n\n[중복 조합]\n" + pairsText);
+    }
+	
+</script>
 </html>
