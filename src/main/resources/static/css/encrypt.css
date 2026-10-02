@@ -1,0 +1,76 @@
+@charset "UTF-8";
+
+/* 버튼 스타일 (보라색 포인트) */
+.btn-custom-purple {
+    background-color: #6f42c1;
+    border-color: #6f42c1;
+    color: #ffffff;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-custom-purple:hover {
+    background-color: #59359a;
+    border-color: #59359a;
+    color: #ffffff;
+}
+
+.btn-custom-purple:disabled {
+    background-color: #8c68cd;
+    border-color: #8c68cd;
+    color: #ffffff;
+}
+
+/* 히어로 카드의 앱 배지 */
+.app-badge {
+    display: inline-block;
+    padding: 0.25em 0.8em;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #6f42c1;
+    background-color: #f3ebff;
+    border-radius: 50rem;
+    letter-spacing: 0.5px;
+}
+
+/* 카드 헤더 선 및 아이콘 */
+.section-header i {
+    font-size: 1.25rem;
+}
+
+/* 업로드 미리보기 파일 리스트 */
+#uploadFileListGroup {
+    border-color: #dee2e6 !important;
+}
+
+#uploadFileListGroup .list-group-item {
+    transition: background-color 0.15s ease-in-out;
+}
+
+#uploadFileListGroup .list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+/* 업로드 미리보기 스크롤바 커스텀 */
+#uploadFileListGroup::-webkit-scrollbar {
+    width: 6px;
+}
+
+#uploadFileListGroup::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 0 8px 8px 0;
+}
+
+#uploadFileListGroup::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+#uploadFileListGroup::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}
+
+/* 결과 파일 목록 링크 호버 효과 */
+#fileListGroup .list-group-item-action:hover {
+    background-color: #f1f3f5;
+}
