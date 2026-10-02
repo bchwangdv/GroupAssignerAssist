@@ -37,6 +37,12 @@ dependencies {
     implementation 'org.apache.poi:poi-ooxml:5.2.5'
 }
 
+dependencies {
+    // PDFBox (PDF 처리 및 암호화)
+    implementation 'org.apache.pdfbox:pdfbox:3.0.8'
+    implementation 'org.apache.pdfbox:pdfbox-io:3.0.8'
+}
+
 tasks.named('test') {
 	useJUnitPlatform()
 }

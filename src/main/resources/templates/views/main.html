@@ -2,202 +2,87 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
     <meta charset="UTF-8">
-	<meta property="og:title" content="Aalto 조편성 프로그램 v1.0">
-	<meta property="og:type" content="website">
-	<meta property="og:image" content="image/meta.png">
-	<meta property="og:description" content="※aSSIST 외부 공유 금지※">
-	<link rel="icon" href="/images/favicon.png" type="image/x-icon">
-	<link rel="shortcut icon" href="/images/favicon.png" type="image/x-icon">
-    <title>조편성 메인</title>
+    <meta property="og:title" content="Aalto 서비스 메인 v1.1">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="image/meta.png">
+    <meta property="og:description" content="※aSSIST 외부 공유 금지※">
+    <link rel="icon" href="/images/favicon.png" type="image/x-icon">
+    <link rel="shortcut icon" href="/images/favicon.png" type="image/x-icon">
+    <title>Aalto 서비스 메인</title>
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <!-- Bootstrap 5 CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- (선택) Bootstrap Icons -->
+    <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/main.css" />
+
+    <style>
+        /* 진한 보라색 그라데이션 카드 스타일 */
+        .menu-card {
+            background: linear-gradient(135deg, #4b1248 0%, #1f0449 100%);
+            border-radius: 1.25rem; /* 곡률 지정 */
+            color: #ffffff; /* 흰색 글씨 */
+            border: none;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-decoration: none;
+            display: block;
+            cursor: pointer;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(31, 4, 73, 0.3) !important;
+            color: #ffffff;
+        }
+
+        .menu-card .icon-wrapper {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+    </style>
 </head>
-<body class="bg-body-tertiary">
+<body class="bg-body-tertiary min-vh-100 d-flex flex-column justify-content-between">
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-7 col-md-8">
+<div class="container py-5 my-auto">
+    <div class="row justify-content-center text-center mb-5">
+        <div class="col-lg-8">
+            <span class="badge bg-secondary-subtle text-secondary-emphasis px-3 py-2 rounded-pill fw-semibold mb-2">Aalto EMBA</span>
+            <h1 class="display-6 fw-bold">서비스 선택</h1>
+            <p class="text-muted">원하시는 작업 서비스를 선택해주세요.</p>
+        </div>
+    </div>
 
-            <!-- 헤더 카드 -->
-            <div class="card card-hero shadow-sm mb-4">
-                <div class="card-body text-center">
-                    <div class="app-badge mb-2">Aalto EMBA</div>
-                    <h1 class="h3 fw-bold mb-1">조 편성 프로그램 v1.1</h1>
-                </div>
-            </div>
-
-            <!-- 메인 카드 -->
-            <div class="card shadow-sm rounded-3 mb-4">
-                <div class="card-body p-4 p-md-5">
-
-                    <div class="section-header d-flex align-items-center mb-4">
-                        <i class="bi bi-clipboard-check me-2 text-primary-emphasis"></i>
-                        <h2 class="h5 mb-0">입력 정보</h2>
+    <div class="row justify-content-center g-4">
+        <!-- 조편성 바로가기 카드 -->
+        <div class="col-md-5 col-lg-4">
+            <a href="group" class="card menu-card shadow p-4 text-center h-100">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center py-4">
+                    <div class="icon-wrapper">
+                        <i class="bi bi-people-fill"></i>
                     </div>
-
-                    <form id="assignForm" action="result" method="post" enctype="multipart/form-data" novalidate>
-                        <!-- 조 개수 -->
-                        <div class="mb-4">
-                            <label for="numGroups" class="form-label fw-semibold">조 개수 <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control form-control-lg" id="numGroups" name="numGroups" min="1" placeholder="예: 6" required>
-                            <div class="form-text">원하는 조의 개수를 숫자로 입력하세요.</div>
-                        </div>
-
-                        <!-- Profile 업로드 -->
-                        <div class="mb-4">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label class="form-label fw-semibold mb-0">
-                                    Profile 업로드 <span class="text-danger">*</span>
-                                </label>
-                                <a href="downloadProfileTemplate" class="btn btn-sm btn-outline-secondary" id="downloadTemplateBtn">
-                                    <i class="bi bi-download me-1"></i>양식 다운로드
-                                </a>
-                            </div>
-                            <div class="small text-muted mb-2">반드시 제공된 양식을 사용해 주세요.</div>
-                            <input type="file" class="form-control" id="profile" name="profile" accept=".xlsx" required>
-                        </div>
-
-                        <!-- 고려사항 -->
-                        <div class="mb-4">
-                            <div class="section-header d-flex align-items-center mb-2">
-                                <i class="bi bi-sliders me-2 text-primary-emphasis"></i>
-                                <h3 class="h6 mb-0">조편성 고려사항 <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis ms-1">선택</span></h3>
-                            </div>
-                            <div class="text-muted small mb-2">* 두 항목 모두 선택 시 <span class="fw-semibold">중복 여부</span>를 우선 고려합니다.</div>
-
-                            <div class="rounded-3 p-3 bg-light-subtle border">
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" name="criteria" value="gender" id="checkGender">
-                                    <label class="form-check-label" for="checkGender">성비</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="criteria" value="previous" id="checkPrevious">
-                                    <label class="form-check-label" for="checkPrevious">이전 조편성</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 이전 조편성 업로드 -->
-                        <div class="mb-4" id="previousGroupUpload" style="display: none;">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label class="form-label fw-semibold mb-0">
-                                    이전 조편성 파일 업로드 <span class="text-danger">*</span>
-                                </label>
-                                <a href="downloadPreTemplate" class="btn btn-sm btn-outline-secondary" id="downloadPreTemplateBtn">
-                                    <i class="bi bi-download me-1"></i>양식 다운로드
-                                </a>
-                            </div>
-                            <div class="small text-muted mb-2">반드시 제공된 양식을 사용해 주세요.</div>
-                            <input type="file" class="form-control" name="previousGroups" id="previousGroups" accept=".xlsx" multiple>
-                        </div>
-
-                        <!-- 버튼 -->
-                        <div class="d-grid">
-                            <button id="assignButton" type="button" class="btn btn-custom-purple btn-lg">
-                                <span class="btn-label"><i class="bi bi-magic me-2"></i>조 편성</span>
-                                <span class="btn-spinner spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                            </button>
-                        </div>
-                    </form>
+                    <h2 class="h4 fw-bold mb-2">조편성</h2>
+                    <p class="mb-0 text-white-50 small">성비 및 이전 조편성을 고려한 스마트 조편성 프로그램</p>
                 </div>
-            </div>
+            </a>
+        </div>
 
-            <!-- 패치노트 -->
-            <div class="card shadow-sm rounded-3">
-                <div class="card-body p-4">
-                    <div class="section-header d-flex align-items-center mb-3">
-                        <i class="bi bi-journal-text me-2 text-primary-emphasis"></i>
-                        <h2 class="h6 mb-0">패치노트</h2>
+        <!-- PDF 암호화 바로가기 카드 -->
+        <div class="col-md-5 col-lg-4">
+            <a href="encrypt" class="card menu-card shadow p-4 text-center h-100">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center py-4">
+                    <div class="icon-wrapper">
+                        <i class="bi bi-file-earmark-lock2-fill"></i>
                     </div>
-                    <ul class="list-group list-group-flush small">
-                        <li class="list-group-item">260423 v1.1 — 조편성 알고리즘 변경</li>
-                        <li class="list-group-item">260415 v1.0 — 배포 프로세스 변경 (24h 시스템)</li>
-                        <li class="list-group-item">250728 v0.2 — 중복 반영 조편성 업데이트</li>
-                        <li class="list-group-item">250724 v0.1 — 초기 배포 (성비 반영 조편성)</li>
-                    </ul>
+                    <h2 class="h4 fw-bold mb-2">PDF 암호화</h2>
+                    <p class="mb-0 text-white-50 small">문서 보안 강화를 위한 PDF 암호화 서비스</p>
                 </div>
-            </div>
-
+            </a>
         </div>
     </div>
 </div>
 
 <!-- footer -->
 <div th:replace="~{footer :: footer}"></div>
-
-<!-- JS -->
-<script>
-const assignButton = document.getElementById("assignButton");
-
-assignButton.addEventListener('click', () => {
-    const numGroups = document.getElementById("numGroups").value;
-    const profileFile = document.getElementById("profile").files[0];
-    const checkPrevious = document.getElementById("checkPrevious");
-    const previousGroupsInput = document.getElementById("previousGroups");
-    const previousFiles = previousGroupsInput ? previousGroupsInput.files : [];
-
-    if (!numGroups) {
-        alert("조 개수를 입력해주세요!");
-        return;
-    }
-
-    if (!profileFile) {
-        alert("Profile을 업로드해주세요!");
-        return;
-    }
-
-    const criteriaChecked = document.querySelectorAll('input[name="criteria"]:checked').length > 0;
-    if (!criteriaChecked) {
-        const proceed = confirm("고려 사항을 선택하지 않은 경우 완전 무작위 편성 됩니다.\n계속 진행하시겠습니까?");
-        if (!proceed) return;
-    }
-
-    if (checkPrevious.checked && previousFiles.length === 0) {
-        alert("이전 조편성을 고려하려면 이전 조편성 파일을 업로드해야 합니다.");
-        return;
-    }
-
-    // 버튼 로딩 UI
-    assignButton.disabled = true;
-    assignButton.classList.add('loading');
-    document.getElementById("assignForm").submit();
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-    const checkPrevious = document.getElementById("checkPrevious");
-    const uploadBox = document.getElementById("previousGroupUpload");
-    const fileInput = document.getElementById("previousGroups");
-
-    checkPrevious.addEventListener("change", function () {
-        uploadBox.style.display = this.checked ? "block" : "none";
-        if (!this.checked) fileInput.value = "";
-    });
-
-    fileInput.addEventListener("change", function () {
-        if (this.files.length > 6) {
-            alert("최대 6개의 파일만 업로드할 수 있습니다.");
-            this.value = "";
-        }
-    });
-
-    // Profile 양식 다운로드 확인
-    const downloadBtn = document.getElementById("downloadTemplateBtn");
-    downloadBtn.addEventListener("click", function (e) {
-        const proceed = confirm("Profile 양식을 다운로드 합니다. 계속하시겠습니까?");
-        if (!proceed) e.preventDefault();
-    });
-
-    // 이전 조편성 양식 다운로드 확인
-    const downloadPreBtn = document.getElementById("downloadPreTemplateBtn");
-    downloadPreBtn.addEventListener("click", function (e) {
-        const proceed = confirm("이전 조편성 양식을 다운로드 합니다. 계속하시겠습니까?");
-        if (!proceed) e.preventDefault();
-    });
-});
-</script>
 </body>
 </html>

@@ -35,8 +35,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.assist.GroupAssignerAssist.model.Person;
 import com.assist.GroupAssignerAssist.dto.GroupingResult; // DTO 임포트 추가
+import com.assist.GroupAssignerAssist.model.Person;
 import com.assist.GroupAssignerAssist.service.GroupAssignerAssistService; // Service 임포트 추가
 
 import jakarta.servlet.http.HttpSession;
@@ -44,13 +44,17 @@ import jakarta.servlet.http.HttpSession;
 @Controller
 public class GroupAssignerAssistController {
 
-    // 👉 Service 의존성 주입 (이제 계산은 Service가 담당합니다)
     private final GroupAssignerAssistService groupAssignerAssistService;
 
     public GroupAssignerAssistController(GroupAssignerAssistService groupAssignerAssistService) {
         this.groupAssignerAssistService = groupAssignerAssistService;
     }
-
+    
+    @GetMapping("group")
+    public String groupForm() {
+        return "group";
+    }
+      
     // 엑셀에서 학생 목록 읽어오기
     public List<Person> loadStudentFromProfile(MultipartFile profile) {
         List<Person> people = new ArrayList<>();
@@ -144,7 +148,7 @@ public class GroupAssignerAssistController {
         return result;
     }
 
-    // 👉 핵심 비즈니스 로직 호출 부 (깔끔하게 정리됨)
+    // 핵심 로직 호출 부
     @PostMapping("result")
     public String result(
             @RequestParam("numGroups") int numGroups,
@@ -173,15 +177,14 @@ public class GroupAssignerAssistController {
         model.addAttribute("numGroups", numGroups);
         model.addAttribute("bestGroups", resultData.getGroups());
         model.addAttribute("overlapCount", resultData.getOverlapCount()); // 겹친 횟수 알림용
-        model.addAttribute("overlappingPairs", resultData.getOverlappingPairs()); // 👉 추가: 이름 조합 목록
+        model.addAttribute("overlappingPairs", resultData.getOverlappingPairs()); // 이름 조합 목록
 
-        // 엑셀 다운로드를 위해 세션에 임시 저장 (추후 고유 ID 캐시 방식으로 개선 권장)
         session.setAttribute("bestGroups", resultData.getGroups());
 
         return "result";
     }
 
-    // 엑셀 다운로드 (기존 로직 유지)
+    // 엑셀 다운로드
     @GetMapping("downloadExcel")
     public ResponseEntity<byte[]> downloadExcel(HttpSession session) {
 
@@ -271,7 +274,7 @@ public class GroupAssignerAssistController {
         }
     }
 
-    // 템플릿 파일 다운로드 (기존 로직 유지)
+    // 템플릿 파일 다운로드
     @GetMapping("downloadProfileTemplate")
     public ResponseEntity<byte[]> downloadProfileTemplate() throws IOException {
         ClassPathResource resource = new ClassPathResource("static/profile.xlsx");

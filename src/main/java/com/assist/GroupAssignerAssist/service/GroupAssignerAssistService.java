@@ -9,8 +9,7 @@ import java.util.*;
 @Service
 public class GroupAssignerAssistService {
 
-    // 가중치 및 탐색 횟수 설정
-    private static final int PENALTY_OVERLAP = -100; // 이전 조원과 겹칠 때의 강력한 페널티 (Hard Constraint)
+    private static final int PENALTY_OVERLAP = -100; // 이전 조원과 겹칠 때의 페널티
     private static final int MAX_IMPROVEMENT_STEPS = 2000; // 자리 바꾸기(Swap) 시도 횟수
 
     public GroupingResult assignBestGrouping(

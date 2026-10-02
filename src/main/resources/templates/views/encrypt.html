@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta property="og:title" content="Aalto PDF 암호화 도구 v1.0">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="※aSSIST 외부 공유 금지※">
+    <link rel="icon" href="/images/favicon.png" type="image/x-icon">
+    <link rel="shortcut icon" href="/images/favicon.png" type="image/x-icon">
+    <title>PDF 암호화 도구</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/group.css" />
+</head>
+<body class="bg-body-tertiary">
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-8">
+
+            <!-- 헤더 카드 -->
+            <div class="card card-hero shadow-sm mb-4">
+                <div class="card-body text-center position-relative">
+                    <!-- 메인 페이지 이동 버튼 -->
+                    <a href="/" class="btn btn-sm btn-outline-secondary position-absolute top-50 start-0 translate-middle-y ms-3">
+                        <i class="bi bi-house-door me-1"></i>메인
+                    </a>
+                    <div class="app-badge mb-2">Aalto EMBA</div>
+                    <h1 class="h3 fw-bold mb-1">PDF 보안 및 암호화 v1.0</h1>
+                </div>
+            </div>
+
+            <!-- 메인 카드 -->
+            <div class="card shadow-sm rounded-3 mb-4">
+                <div class="card-body p-4 p-md-5">
+
+                    <div class="section-header d-flex align-items-center mb-4">
+                        <i class="bi bi-shield-lock me-2 text-primary-emphasis"></i>
+                        <h2 class="h5 mb-0">파일 및 암호 설정</h2>
+                    </div>
+
+                    <form id="encryptForm" enctype="multipart/form-data" novalidate>
+                        <!-- PDF 파일 업로드 -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label fw-semibold mb-0">
+                                    PDF 파일 업로드 <span class="text-danger">*</span>
+                                </label>
+                                <button type="button" id="resetFilesBtn" class="btn btn-link text-decoration-none text-danger p-0 small d-none" onclick="clearSelectedFiles()">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i>선택 초기화
+                                </button>
+                            </div>
+                            <div class="small text-muted mb-2">여러 파일을 한 번에 선택할 수 있습니다.</div>
+                            <input type="file" class="form-control" id="pdfFiles" name="files" accept=".pdf" multiple required onchange="handleFileSelect(event)">
+                            
+							<!-- 업로드된 파일 미리보기 리스트 영역 -->
+							<div id="uploadPreviewSection" class="mt-3 d-none">
+							    <div class="small text-secondary mb-1 fw-semibold">선택된 파일 목록 (<span id="selectedCount">0</span>개)</div>
+							    
+							    <!-- style 속성 수정: max-height를 180px로 설정하고 overflow-y 속성 추가 -->
+							    <div class="list-group list-group-flush border rounded-3 bg-white" 
+							         id="uploadFileListGroup" 
+							         style="max-height: 180px; overflow-y: auto;">
+							        <!-- JS에서 동적 생성 -->
+							    </div>
+							</div>
+                        </div>
+
+                        <!-- 암호 입력 -->
+                        <div class="mb-4">
+                            <label for="password" class="form-label fw-semibold">설정할 암호 <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control form-control-lg" id="password" name="password" placeholder="PDF 보안 암호를 입력하세요" required>
+                            <div class="form-text">암호화 완료 후 파일명 뒤에 <code>(PW암호명)</code>이 붙습니다.</div>
+                        </div>
+
+                        <!-- 암호화하기 버튼 -->
+                        <div class="d-grid mb-3">
+                            <button id="encryptBtn" type="button" class="btn btn-custom-purple btn-lg" onclick="processEncrypt()">
+                                <span class="btn-label"><i class="bi bi-lock me-2"></i>PDF 암호화하기</span>
+                                <span class="btn-spinner spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- 결과 파일 영역 (초기 숨김) -->
+                    <div id="resultSection" class="mt-4 pt-3 border-top d-none">
+                        <div class="section-header d-flex align-items-center justify-content-between mb-3">
+                            <h3 class="h6 fw-bold mb-0"><i class="bi bi-check-circle-fill text-success me-2"></i>암호화 완료 파일 목록</h3>
+                            <button id="zipDownloadBtn" type="button" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-file-earmark-zip me-1"></i>전체 ZIP 파일 다운로드
+                            </button>
+                        </div>
+
+                        <!-- 하이퍼링크 파일 목록 -->
+                        <div class="list-group list-group-flush border rounded-3 overflow-hidden" id="fileListGroup">
+                            <!-- JS에서 동적으로 리스트 생성 -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- 패치노트 -->
+            <div class="card shadow-sm rounded-3">
+                <div class="card-body p-4">
+                    <div class="section-header d-flex align-items-center mb-3">
+                        <i class="bi bi-journal-text me-2 text-primary-emphasis"></i>
+                        <h2 class="h6 mb-0">패치노트</h2>
+                    </div>
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item">261002 v1.0 — PDF 개별/다중 암호화 및 파일 다운로드 리스트 UI 적용</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- footer -->
+<div th:replace="~{footer :: footer}"></div>
+
+<!-- JS -->
+<script>
+let globalEncryptedFiles = []; // 암호화된 파일(Blob) 정보를 저장할 배열
+
+// 업로드 파일 선택 변경 시 감지
+function handleFileSelect(event) {
+    renderUploadFileList();
+}
+
+// 업로드 파일 리스트 UI 바인딩
+function renderUploadFileList() {
+    const fileInput = document.getElementById("pdfFiles");
+    const previewSection = document.getElementById("uploadPreviewSection");
+    const fileListGroup = document.getElementById("uploadFileListGroup");
+    const selectedCount = document.getElementById("selectedCount");
+    const resetBtn = document.getElementById("resetFilesBtn");
+
+    const files = Array.from(fileInput.files);
+
+    if (files.length === 0) {
+        previewSection.classList.add("d-none");
+        resetBtn.classList.add("d-none");
+        fileListGroup.innerHTML = "";
+        return;
+    }
+
+    selectedCount.textContent = files.length;
+    previewSection.classList.remove("d-none");
+    resetBtn.classList.remove("d-none");
+    fileListGroup.innerHTML = "";
+
+    files.forEach((file, index) => {
+        const item = document.createElement("div");
+        item.className = "list-group-item d-flex justify-content-between align-items-center py-2 px-3";
+        item.innerHTML = `
+            <div class="text-truncate me-2">
+                <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                <span class="small fw-medium">${file.name}</span>
+                <span class="text-muted ms-2 small">(${formatFileSize(file.size)})</span>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-danger border-0 p-1" title="목록에서 제거" onclick="removeFileFromList(${index})">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        `;
+        fileListGroup.appendChild(item);
+    });
+}
+
+// 선택된 파일 개별 삭제 처리
+function removeFileFromList(indexToRemove) {
+    const fileInput = document.getElementById("pdfFiles");
+    const dt = new DataTransfer();
+    const files = Array.from(fileInput.files);
+
+    files.forEach((file, index) => {
+        if (index !== indexToRemove) {
+            dt.items.add(file);
+        }
+    });
+
+    fileInput.files = dt.files;
+    renderUploadFileList();
+}
+
+// 전체 파일 선택 초기화
+function clearSelectedFiles() {
+    const fileInput = document.getElementById("pdfFiles");
+    fileInput.value = "";
+    renderUploadFileList();
+}
+
+// 바이트 용량 읽기 편하게 변환 (KB, MB)
+function formatFileSize(bytes) {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+}
+
+async function processEncrypt() {
+    const fileInput = document.getElementById("pdfFiles");
+    const passwordInput = document.getElementById("password");
+    const encryptBtn = document.getElementById("encryptBtn");
+    const resultSection = document.getElementById("resultSection");
+    const fileListGroup = document.getElementById("fileListGroup");
+
+    if (!fileInput.files || fileInput.files.length === 0) {
+        alert("PDF 파일을 업로드해주세요!");
+        return;
+    }
+
+    if (!passwordInput.value.trim()) {
+        alert("설정할 암호를 입력해주세요!");
+        return;
+    }
+
+    // UI 버튼 로딩 상태
+    encryptBtn.disabled = true;
+    const label = encryptBtn.querySelector('.btn-label');
+    const spinner = encryptBtn.querySelector('.btn-spinner');
+    if (label) label.classList.add('d-none');
+    if (spinner) spinner.classList.remove('d-none');
+
+    const formData = new FormData();
+    for (let i = 0; i < fileInput.files.length; i++) {
+        formData.append('files', fileInput.files[i]);
+    }
+    formData.append('password', passwordInput.value.trim());
+
+    try {
+        // 암호화 API 호출
+        const response = await fetch('/encrypt/process', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error('PDF 암호화 처리 중 오류가 발생했습니다.');
+        }
+
+        const filesData = await response.json(); 
+
+        globalEncryptedFiles = filesData; 
+        fileListGroup.innerHTML = '';
+
+        filesData.forEach((file, index) => {
+            const blob = base64ToBlob(file.base64Data, 'application/pdf');
+            const fileUrl = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = fileUrl;
+            a.download = file.fileName;
+            a.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2';
+            a.innerHTML = `
+                <span><i class="bi bi-file-earmark-pdf text-danger me-2"></i>${file.fileName}</span>
+                <span class="btn btn-sm btn-light border text-primary"><i class="bi bi-download me-1"></i>다운로드</span>
+            `;
+            fileListGroup.appendChild(a);
+        });
+
+        resultSection.classList.remove('d-none');
+
+        document.getElementById('zipDownloadBtn').onclick = () => downloadAllAsZip(passwordInput.value.trim());
+
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        encryptBtn.disabled = false;
+        if (label) label.classList.remove('d-none');
+        if (spinner) spinner.classList.add('d-none');
+    }
+}
+
+function base64ToBlob(base64, mimeType) {
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type: mimeType });
+}
+
+async function downloadAllAsZip(password) {
+    const fileInput = document.getElementById("pdfFiles");
+    
+    // 1. 선택된 파일 검증
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        alert("다운로드할 PDF 파일이 선택되지 않았습니다.");
+        return;
+    }
+
+    const formData = new FormData();
+    for (let i = 0; i < fileInput.files.length; i++) {
+        formData.append('files', fileInput.files[i]);
+    }
+    formData.append('password', password);
+
+    try {
+        const response = await fetch('/encrypt/zip', {
+            method: 'POST',
+            body: formData
+        });
+
+        // 2. 서버 에러 발생 시 에러 메시지 응답 읽기
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || 'ZIP 압축 생성 중 서버 오류가 발생했습니다.');
+        }
+
+        // 3. 서버 응답 헤더에서 파일명 추출 (Content-Disposition)
+        let fileName = "암호화_PDF_목록.zip";
+        const disposition = response.headers.get('Content-Disposition');
+        if (disposition && disposition.indexOf('filename*') !== -1) {
+            // UTF-8 인코딩된 파일명 추출
+            const matches = /filename\*=UTF-8''(.+)$/.exec(disposition);
+            if (matches && matches[1]) {
+                fileName = decodeURIComponent(matches[1]);
+            }
+        }
+
+        // 4. Blob 파일 다운로드 처리
+        const blob = await response.blob();
+        const downloadUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(downloadUrl);
+
+    } catch (e) {
+        console.error(e);
+        alert(e.message || "ZIP 압축 파일 다운로드 중 오류가 발생했습니다.");
+    }
+}
+</script>
+</body>
+</html>
